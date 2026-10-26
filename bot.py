@@ -65,6 +65,8 @@ def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--mode",choices=["full","watch"],default="full"); mode=ap.parse_args().mode
     if not KEY: print("Falta secreto TWELVE_DATA_API_KEY"); return 2
     s=load_state(); syms=universe()
+        telegram("✅ Conexión con GitHub correcta. Tu bot bursátil S&P 500 se ha iniciado.")
+        print("Mensaje de prueba de Telegram enviado.")
     if mode=="watch": syms=s.get("last_buy_candidates",[])[:100]
     if not syms: print("No hay candidatos guardados para revisar."); return 0
     rows=[]; errors=[]; alerts=[]; candidates=[]
