@@ -103,8 +103,21 @@ def main():
         else: msg=f"⚠️ VIGILANCIA TÉCNICA (no orden de venta): {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; RSI {r['rsi']:.1f}; MACD bajo señal; momentum 3m {r['mom3']*100:+.1f}%.\nRevisar soporte y fundamentales; no vender solo por esta alerta."
         telegram(msg); keys.append(k)
     s["last_alert_keys"]=keys[-2000:]; s["last_buy_candidates"]=candidates[:100]; s["last_scan"]=now; save_state(s)
-    print(f"Completado: {len(rows)}/{len(syms)} datos válidos; errores={len(errors)}; candidatos={len(buys)}; debilidad={len(weak)}")
-    if errors and len(rows)<max(20,int(len(syms)*.5)): print("ATENCIÓN: escaneo incompleto; ausencia de alertas no significa ausencia de oportunidades.")
+        resumen = (
+        f"📊 RESUMEN S&P 500\n"
+        f"Modo: {mode}\n"
+        f"Acciones con datos válidos: {len(rows)}/{len(syms)}\n"
+        f"Errores: {len(errors)}\n"
+        f"Candidatos técnicos: {len(buys)}\n"
+        f"Señales de debilidad: {len(weak)}\n"
+        f"Fecha: {now}\n\n"
+        "Los candidatos requieren validar fundamentales, valoración y noticias. "
+        "No son órdenes de compra ni de venta."
+    )
+    telegram(resumen)
+    print(resumen)
+    if errors and len(rows)<max(20,int(len(syms)*.5)):
+        print("ATENCIÓN: escaneo incompleto; ausencia de alertas no significa ausencia de oportunidades.")
     return 0 if len(rows)>=max(20,int(len(syms)*.5)) else 2
 
 if __name__=="__main__": sys.exit(main())
