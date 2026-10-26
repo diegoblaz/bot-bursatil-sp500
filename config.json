@@ -1,0 +1,6 @@
+{
+  "max_symbols_full_scan": 505,
+  "max_symbols_watch_scan": 100,
+  "request_delay_seconds": 8.2,
+  "note": "Las señales son técnicas; no sustituyen validación fundamental."
+}
