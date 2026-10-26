@@ -54,8 +54,8 @@ def calc(x):
     return x
 
 def conditions(r):
-    return bool(r.close>r.sma50>r.sma200 and 52<=r.rsi<=68 and r.macd>r.signal and r.hist>0 and r.mom6>0 and r.rvol>=1.1)
-
+    return bool(r["close"]>r["sma50"]>r["sma200"] and 52<=r["rsi"]<=68 and r["macd"]>r["signal"] and r["hist"]>0 and r["mom6"]>0 and r["rvol"]>=1.1)
+    
 def telegram(msg):
     if not (TG_TOKEN and TG_CHAT): return
     try: requests.post(f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",json={"chat_id":TG_CHAT,"text":msg[:4000]},timeout=20)
