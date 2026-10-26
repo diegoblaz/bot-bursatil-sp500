@@ -1,5 +1,6 @@
 
 import os, sys, json, time, argparse
+from io import StringIO
 from pathlib import Path
 from datetime import datetime, timezone
 import requests, pandas as pd, numpy as np
@@ -19,7 +20,10 @@ def load_state():
 def save_state(s): STATE.write_text(json.dumps(s,indent=2,ensure_ascii=False),encoding="utf-8")
 
 def universe():
-    tabs=pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
+    url="https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+    r=requests.get(url,headers={"User-Agent":"Mozilla/5.0"},timeout=30)
+    r.raise_for_status()
+    tabs=pd.read_html(StringIO(r.text))
     t=next(x for x in tabs if "Symbol" in x.columns and "Security" in x.columns)
     return list(dict.fromkeys(t["Symbol"].astype(str).str.strip().str.replace(".","-",regex=False).tolist()))[:505]
 
