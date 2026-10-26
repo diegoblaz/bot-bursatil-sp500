@@ -103,7 +103,7 @@ def main():
         else: msg=f"⚠️ VIGILANCIA TÉCNICA (no orden de venta): {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; RSI {r['rsi']:.1f}; MACD bajo señal; momentum 3m {r['mom3']*100:+.1f}%.\nRevisar soporte y fundamentales; no vender solo por esta alerta."
         telegram(msg); keys.append(k)
     s["last_alert_keys"]=keys[-2000:]; s["last_buy_candidates"]=candidates[:100]; s["last_scan"]=now; save_state(s)
-        resumen = (
+    resumen = (
         f"📊 RESUMEN S&P 500\n"
         f"Modo: {mode}\n"
         f"Acciones con datos válidos: {len(rows)}/{len(syms)}\n"
