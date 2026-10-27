@@ -1,13 +1,5 @@
 {
-  "last_buy_candidates": [
-    "AIZ",
-    "CI",
-    "KO",
-    "EL",
-    "HLT",
-    "NSC",
-    "VRSN"
-  ],
+  "last_buy_candidates": [],
   "last_alert_keys": [
     "WEAK:AKAM:2026-10-26",
     "WEAK:GOOGL:2026-10-26",
@@ -81,5 +73,5 @@
     "BUY:NSC:2026-10-26"
   ],
   "last_prices": {},
-  "last_scan": "2026-10-27 08:53 UTC"
+  "last_scan": "2026-10-27 15:49 UTC"
 }
