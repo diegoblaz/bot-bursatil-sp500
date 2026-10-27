@@ -1,5 +1,7 @@
 {
-  "last_buy_candidates": [],
+  "last_buy_candidates": [
+    "VRSN"
+  ],
   "last_alert_keys": [
     "WEAK:AKAM:2026-10-26",
     "WEAK:GOOGL:2026-10-26",
@@ -61,8 +63,10 @@
     "WEAK:VRT:2026-10-26",
     "WEAK:VST:2026-10-26",
     "WEAK:WAB:2026-10-26",
-    "WEAK:WDC:2026-10-26"
+    "WEAK:WDC:2026-10-26",
+    "WEAK:ROK:2026-10-26",
+    "BUY:VRSN:2026-10-26"
   ],
   "last_prices": {},
-  "last_scan": "2026-10-26 22:55 UTC"
+  "last_scan": "2026-10-27 00:22 UTC"
 }
