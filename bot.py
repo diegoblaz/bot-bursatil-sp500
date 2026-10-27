@@ -102,7 +102,7 @@ def fundamental_analysis(sym):
             final_score = None
         else:
             final_score = round(score / available * 100)
-            if available < 60:
+            if available < 80:
                 status = "DATOS INSUFICIENTES"
             elif final_score >= 70:
                 status = "FUNDAMENTALES FAVORABLES"
