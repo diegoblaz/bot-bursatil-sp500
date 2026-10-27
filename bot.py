@@ -200,4 +200,11 @@ def main():
         print("ATENCIÓN: escaneo incompleto; ausencia de alertas no significa ausencia de oportunidades.")
     return 0 if len(rows)>=max(1,int(len(syms)*.5)) else 2
 
-if __name__=="__main__": sys.exit(main())
+if __name__ == "__main__":
+    if os.getenv("TEST_FUNDAMENTALS") == "1":
+        result = fundamental_analysis("KO")
+        print("PRUEBA FUNDAMENTALES COCA-COLA")
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    else:
+        sys.exit(main())
+    
