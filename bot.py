@@ -4,6 +4,7 @@ from io import StringIO
 from pathlib import Path
 from datetime import datetime, timezone
 import requests, pandas as pd, numpy as np
+import yfinance as yf
 
 ROOT=Path(__file__).resolve().parent
 STATE=ROOT/"state/state.json"; REPORTS=ROOT/"reports"
@@ -53,6 +54,79 @@ def calc(x):
     x["rvol"]=x.volume/x.volume.rolling(20).mean()
     return x
 
+def fundamental_analysis(sym):
+    try:
+        t = yf.Ticker(sym)
+        info = t.info or {}
+
+        def number(key):
+            value = info.get(key)
+            if value is None:
+                return None
+            try:
+                value = float(value)
+                return value if np.isfinite(value) else None
+            except (TypeError, ValueError):
+                return None
+
+        metrics = {
+            "pe": number("trailingPE"),
+            "roe": number("returnOnEquity"),
+            "profit_margin": number("profitMargins"),
+            "revenue_growth": number("revenueGrowth"),
+            "debt_equity": number("debtToEquity"),
+            "price_to_book": number("priceToBook"),
+        }
+
+        score = 0
+        available = 0
+
+        checks = [
+            ("roe", lambda v: v >= 0.15, 20),
+            ("profit_margin", lambda v: v >= 0.10, 20),
+            ("revenue_growth", lambda v: v > 0, 15),
+            ("debt_equity", lambda v: v <= 100, 15),
+            ("pe", lambda v: 0 < v <= 25, 15),
+            ("price_to_book", lambda v: 0 < v <= 5, 15),
+        ]
+
+        for key, test, points in checks:
+            value = metrics[key]
+            if value is not None:
+                available += points
+                if test(value):
+                    score += points
+
+        if available == 0:
+            status = "SIN DATOS FUNDAMENTALES"
+            final_score = None
+        else:
+            final_score = round(score / available * 100)
+            if available < 60:
+                status = "DATOS INSUFICIENTES"
+            elif final_score >= 70:
+                status = "FUNDAMENTALES FAVORABLES"
+            elif final_score >= 45:
+                status = "FUNDAMENTALES MIXTOS"
+            else:
+                status = "FUNDAMENTALES DÉBILES"
+
+        return {
+            "status": status,
+            "score": final_score,
+            "coverage": available,
+            "metrics": metrics,
+        }
+
+    except Exception as e:
+        print(f"Error fundamental {sym}: {e}")
+        return {
+            "status": "ERROR AL CONSULTAR FUNDAMENTALES",
+            "score": None,
+            "coverage": 0,
+            "metrics": {},
+        }
+        
 def conditions(r):
     return bool(r["close"]>r["sma50"]>r["sma200"] and 52<=r["rsi"]<=68 and r["macd"]>r["signal"] and r["hist"]>0 and r["mom6"]>0 and r["rvol"]>=1.1)
     
@@ -79,7 +153,8 @@ def main():
                 date=str(a.datetime.date())
                 buy=conditions(a) and conditions(b)
                 weak=(a.close<a.sma50 and a.macd<a.signal and a.mom3<0 and b.close<b.sma50 and b.macd<b.signal and b.mom3<0)
-                row={"symbol":sym,"date":date,"close":float(a.close),"sma50":float(a.sma50),"sma200":float(a.sma200),"rsi":float(a.rsi),"macd":float(a.macd),"signal":float(a.signal),"mom3":float(a.mom3),"mom6":float(a.mom6),"rvol":float(a.rvol),"buy":buy,"weak":weak}
+                fund = fundamental_analysis(sym) if (buy or weak) else {"status": "NO CONSULTADO (sin señal técnica)", "score": None, "coverage": 0, "metrics": {}}
+                row={"symbol":sym,"date":date,"close":float(a.close),"sma50":float(a.sma50),"sma200":float(a.sma200),"rsi":float(a.rsi),"macd":float(a.macd),"signal":float(a.signal),"mom3":float(a.mom3),"mom6":float(a.mom6),"rvol":float(a.rvol),"buy":buy,"weak":weak,"fundamentals":fund}
                 rows.append(row)
                 if buy:
                     candidates.append(sym); k=f"BUY:{sym}:{date}"
@@ -91,7 +166,7 @@ def main():
     now=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     buys=[r for r in rows if r["buy"]]; weak=[r for r in rows if r["weak"]]
     lines=["# Informe bot bursátil S&P 500",f"- Ejecución: {now}",f"- Modo: {mode}",f"- Símbolos: {len(syms)}; con datos válidos: {len(rows)}; errores: {len(errors)}","","> Prototipo técnico: no consulta fundamentales y no emite compras/ventas confirmadas. Valida valoración, resultados y noticias antes de operar.","","## Candidatos técnicos (validación fundamental necesaria)"]
-    lines += [f"- **{r['symbol']}** cierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; SMA200 {r['sma200']:.2f}; RSI {r['rsi']:.1f}; MACD {r['macd']:.3f} vs señal {r['signal']:.3f}; momentum 6m {r['mom6']*100:+.1f}%; volumen relativo {r['rvol']:.2f}x" for r in sorted(buys,key=lambda z:z["mom6"],reverse=True)[:50]] or ["Sin candidatos que cumplan todas las reglas en dos sesiones consecutivas."]
+    lines += [f"- **{r['symbol']}** cierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; SMA200 {r['sma200']:.2f}; RSI {r['rsi']:.1f}; MACD {r['macd']:.3f} vs señal {r['signal']:.3f}; momentum 6m {r['mom6']*100:+.1f}%; volumen relativo {r['rvol']:.2f}x; fundamentales: {r.get('fundamentals', {}).get('status', 'SIN DATOS')}; puntuación: {r.get('fundamentals', {}).get('score', 'N/D')}/100" for r in sorted(buys,key=lambda z:z["mom6"],reverse=True)[:50]] or ["Sin candidatos que cumplan todas las reglas en dos sesiones consecutivas."]
     lines += ["","## Debilidad persistente (vigilancia, no orden de venta)"]
     lines += [f"- **{r['symbol']}** cierre {r['close']:.2f}; RSI {r['rsi']:.1f}; momentum 3m {r['mom3']*100:+.1f}%; MACD bajo señal." for r in sorted(weak,key=lambda z:z["mom3"])[:50]] or ["Sin señales de debilidad persistente según estas reglas."]
     if errors: lines += ["","## Errores (máximo 30)"]+[f"- {e}" for e in errors[:30]]
@@ -99,7 +174,10 @@ def main():
     (REPORTS/f"report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}_{mode}.md").write_text(report,encoding="utf-8")
     keys=s.get("last_alert_keys",[])
     for k,kind,r in alerts:
-        if kind=="BUY": msg=f"🟡 CANDIDATO TÉCNICO — NO COMPRA CONFIRMADA: {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50/200 {r['sma50']:.2f}/{r['sma200']:.2f}; RSI {r['rsi']:.1f}; MACD {r['macd']:.3f} > señal {r['signal']:.3f}; momentum 6m {r['mom6']*100:+.1f}%; volumen {r['rvol']:.2f}x.\nAcción: validar fundamentales, valoración y noticias antes de decidir."
+        if kind=="BUY":
+            f=r.get("fundamentals", {})
+            nota=f"Fundamentales: {f.get('status', 'SIN DATOS')}; puntuación {f.get('score')}/100; cobertura {f.get('coverage', 0)}/100 puntos." if f.get("score") is not None else f"Fundamentales: {f.get('status', 'SIN DATOS')}; sin puntuación fiable."
+            msg=f"🟡 CANDIDATO TÉCNICO — NO COMPRA CONFIRMADA: {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50/200 {r['sma50']:.2f}/{r['sma200']:.2f}; RSI {r['rsi']:.1f}; MACD {r['macd']:.3f} > señal {r['signal']:.3f}; momentum 6m {r['mom6']*100:+.1f}%; volumen {r['rvol']:.2f}x.\n{nota}\nValidar resultados, valoración y noticias antes de decidir."
         else: msg=f"⚠️ VIGILANCIA TÉCNICA (no orden de venta): {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; RSI {r['rsi']:.1f}; MACD bajo señal; momentum 3m {r['mom3']*100:+.1f}%.\nRevisar soporte y fundamentales; no vender solo por esta alerta."
         telegram(msg); keys.append(k)
     s["last_alert_keys"]=keys[-2000:]; s["last_buy_candidates"]=candidates[:100]; s["last_scan"]=now; save_state(s)
