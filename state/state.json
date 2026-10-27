@@ -1,5 +1,11 @@
 {
   "last_buy_candidates": [
+    "AIZ",
+    "CI",
+    "KO",
+    "EL",
+    "HLT",
+    "NSC",
     "VRSN"
   ],
   "last_alert_keys": [
@@ -65,8 +71,15 @@
     "WEAK:WAB:2026-10-26",
     "WEAK:WDC:2026-10-26",
     "WEAK:ROK:2026-10-26",
-    "BUY:VRSN:2026-10-26"
+    "BUY:VRSN:2026-10-26",
+    "BUY:AIZ:2026-10-26",
+    "WEAK:BG:2026-10-26",
+    "BUY:CI:2026-10-26",
+    "BUY:KO:2026-10-26",
+    "BUY:EL:2026-10-26",
+    "BUY:HLT:2026-10-26",
+    "BUY:NSC:2026-10-26"
   ],
   "last_prices": {},
-  "last_scan": "2026-10-27 00:22 UTC"
+  "last_scan": "2026-10-27 08:53 UTC"
 }
