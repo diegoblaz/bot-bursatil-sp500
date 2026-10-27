@@ -165,7 +165,7 @@ def main():
         if i<len(syms)-1: time.sleep(DELAY)
     now=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     buys=[r for r in rows if r["buy"]]; weak=[r for r in rows if r["weak"]]
-    lines=["# Informe bot bursátil S&P 500",f"- Ejecución: {now}",f"- Modo: {mode}",f"- Símbolos: {len(syms)}; con datos válidos: {len(rows)}; errores: {len(errors)}","","> Prototipo técnico: no consulta fundamentales y no emite compras/ventas confirmadas. Valida valoración, resultados y noticias antes de operar.","","## Candidatos técnicos (validación fundamental necesaria)"]
+    lines=["# Informe bot bursátil S&P 500",f"- Ejecución: {now}",f"- Modo: {mode}",f"- Símbolos: {len(syms)}; con datos válidos: {len(rows)}; errores: {len(errors)}","","> Prototipo técnico y filtro fundamental orientativo. Los datos pueden faltar o ser incompletos; no emite compras/ventas confirmadas. Valida resultados, valoración y noticias antes de operar.","","## Candidatos técnicos (validación fundamental necesaria)"]
     lines += [f"- **{r['symbol']}** cierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; SMA200 {r['sma200']:.2f}; RSI {r['rsi']:.1f}; MACD {r['macd']:.3f} vs señal {r['signal']:.3f}; momentum 6m {r['mom6']*100:+.1f}%; volumen relativo {r['rvol']:.2f}x; fundamentales: {r.get('fundamentals', {}).get('status', 'SIN DATOS')}; puntuación: {r.get('fundamentals', {}).get('score', 'N/D')}/100" for r in sorted(buys,key=lambda z:z["mom6"],reverse=True)[:50]] or ["Sin candidatos que cumplan todas las reglas en dos sesiones consecutivas."]
     lines += ["","## Debilidad persistente (vigilancia, no orden de venta)"]
     lines += [f"- **{r['symbol']}** cierre {r['close']:.2f}; RSI {r['rsi']:.1f}; momentum 3m {r['mom3']*100:+.1f}%; MACD bajo señal." for r in sorted(weak,key=lambda z:z["mom3"])[:50]] or ["Sin señales de debilidad persistente según estas reglas."]
@@ -178,7 +178,9 @@ def main():
             f=r.get("fundamentals", {})
             nota=f"Fundamentales: {f.get('status', 'SIN DATOS')}; puntuación {f.get('score')}/100; cobertura {f.get('coverage', 0)}/100 puntos." if f.get("score") is not None else f"Fundamentales: {f.get('status', 'SIN DATOS')}; sin puntuación fiable."
             msg=f"🟡 CANDIDATO TÉCNICO — NO COMPRA CONFIRMADA: {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50/200 {r['sma50']:.2f}/{r['sma200']:.2f}; RSI {r['rsi']:.1f}; MACD {r['macd']:.3f} > señal {r['signal']:.3f}; momentum 6m {r['mom6']*100:+.1f}%; volumen {r['rvol']:.2f}x.\n{nota}\nValidar resultados, valoración y noticias antes de decidir."
-        else: msg=f"⚠️ VIGILANCIA TÉCNICA (no orden de venta): {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; RSI {r['rsi']:.1f}; MACD bajo señal; momentum 3m {r['mom3']*100:+.1f}%.\nRevisar soporte y fundamentales; no vender solo por esta alerta."
+        else:
+            f=r.get("fundamentals", {})
+            msg=f"⚠️ VIGILANCIA TÉCNICA (no orden de venta): {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; RSI {r['rsi']:.1f}; MACD bajo señal; momentum 3m {r['mom3']*100:+.1f}%.\nFundamentales: {f.get('status', 'SIN DATOS')}; puntuación {f.get('score') if f.get('score') is not None else 'N/D'}/100.\nRevisar soporte y fundamentales; no vender solo por esta alerta."
         telegram(msg); keys.append(k)
     s["last_alert_keys"]=keys[-2000:]; s["last_buy_candidates"]=candidates[:100]; s["last_scan"]=now; save_state(s)
     resumen = (
