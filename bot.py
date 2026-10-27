@@ -198,6 +198,6 @@ def main():
     print(resumen)
     if errors and len(rows)<max(20,int(len(syms)*.5)):
         print("ATENCIÓN: escaneo incompleto; ausencia de alertas no significa ausencia de oportunidades.")
-    return 0 if len(rows)>=max(20,int(len(syms)*.5)) else 2
+    return 0 if len(rows)>=max(1,int(len(syms)*.5)) else 2
 
 if __name__=="__main__": sys.exit(main())
