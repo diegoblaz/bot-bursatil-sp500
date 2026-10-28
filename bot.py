@@ -1,89 +1,165 @@
-
-import os, sys, json, time, argparse
+import os
+import sys
+import json
+import time
+import argparse
 from io import StringIO
 from pathlib import Path
 from datetime import datetime, timezone
-import requests, pandas as pd, numpy as np
+
+import requests
+import pandas as pd
+import numpy as np
 import yfinance as yf
 
-ROOT=Path(__file__).resolve().parent
-STATE=ROOT/"state/state.json"; REPORTS=ROOT/"reports"
-REPORTS.mkdir(exist_ok=True); STATE.parent.mkdir(exist_ok=True)
-KEY=os.getenv("TWELVE_DATA_API_KEY","").strip()
-TG_TOKEN=os.getenv("TELEGRAM_BOT_TOKEN","").strip()
-TG_CHAT=os.getenv("TELEGRAM_CHAT_ID","").strip()
-DELAY=8.2
+ROOT = Path(__file__).resolve().parent
+STATE = ROOT / "state" / "state.json"
+REPORTS = ROOT / "reports"
+REPORTS.mkdir(exist_ok=True)
+STATE.parent.mkdir(exist_ok=True)
+
+KEY = os.getenv("TWELVE_DATA_API_KEY", "").strip()
+TG_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+TG_CHAT = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+DELAY = 8.2
+
 
 def load_state():
-    try: return json.loads(STATE.read_text(encoding="utf-8"))
-    except Exception: return {"last_buy_candidates":[],"last_alert_keys":[],"last_prices":{}}
+    try:
+        data = json.loads(STATE.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("El estado no es un objeto JSON")
+        data.setdefault("last_buy_candidates", [])
+        data.setdefault("last_alert_keys", [])
+        data.setdefault("last_prices", {})
+        return data
+    except Exception:
+        return {
+            "last_buy_candidates": [],
+            "last_alert_keys": [],
+            "last_prices": {},
+        }
 
-def save_state(s): STATE.write_text(json.dumps(s,indent=2,ensure_ascii=False),encoding="utf-8")
+
+def save_state(state):
+    STATE.write_text(
+        json.dumps(state, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
 
 def universe():
-    url="https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    r=requests.get(url,headers={"User-Agent":"Mozilla/5.0"},timeout=30)
-    r.raise_for_status()
-    tabs=pd.read_html(StringIO(r.text))
-    t=next(x for x in tabs if "Symbol" in x.columns and "Security" in x.columns)
-    return list(dict.fromkeys(t["Symbol"].astype(str).str.strip().str.replace(".","-",regex=False).tolist()))[:505]
+    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+    response = requests.get(
+        url,
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=30,
+    )
+    response.raise_for_status()
+    tables = pd.read_html(StringIO(response.text))
+    table = next(
+        item for item in tables
+        if "Symbol" in item.columns and "Security" in item.columns
+    )
+    symbols = (
+        table["Symbol"]
+        .astype(str)
+        .str.strip()
+        .str.replace(".", "-", regex=False)
+        .tolist()
+    )
+    return list(dict.fromkeys(symbols))[:505]
 
-def get_data(sym):
+
+def get_data(symbol):
     try:
-        r = requests.get(
+        response = requests.get(
             "https://api.twelvedata.com/time_series",
             params={
-                "symbol": sym,
+                "symbol": symbol,
                 "interval": "1day",
                 "outputsize": 260,
-                "apikey": KEY
+                "apikey": KEY,
             },
-            timeout=30
+            timeout=30,
         )
-        d = r.json()
+        data = response.json()
 
-        if r.status_code != 200 or "values" not in d:
-            motivo = d.get("message", str(d.get("code", "API error")))
-            print(f"ERROR API [{sym}]: HTTP {r.status_code} - {motivo}")
-            return None, motivo
+        if response.status_code != 200 or "values" not in data:
+            reason = data.get("message", str(data.get("code", "API error")))
+            print(f"ERROR API [{symbol}]: HTTP {response.status_code} - {reason}")
+            return None, reason
 
-        x = pd.DataFrame(d["values"])
-        if x.empty:
+        frame = pd.DataFrame(data["values"])
+        if frame.empty:
             return None, "sin datos"
 
-        for c in ["open", "high", "low", "close", "volume"]:
-            x[c] = pd.to_numeric(x[c], errors="coerce")
+        for column in ["open", "high", "low", "close", "volume"]:
+            if column in frame.columns:
+                frame[column] = pd.to_numeric(frame[column], errors="coerce")
+            elif column == "volume":
+                frame[column] = np.nan
+            else:
+                return None, f"falta columna {column}"
 
-        x["datetime"] = pd.to_datetime(x["datetime"], errors="coerce")
-        x = x.dropna(subset=["datetime", "close"]).sort_values("datetime").reset_index(drop=True)
+        frame["datetime"] = pd.to_datetime(frame["datetime"], errors="coerce")
+        frame = (
+            frame.dropna(subset=["datetime", "close"])
+            .sort_values("datetime")
+            .reset_index(drop=True)
+        )
 
-        if len(x) < 205:
-            return None, f"histórico insuficiente: {len(x)}"
+        if len(frame) < 205:
+            return None, f"histórico insuficiente: {len(frame)}"
 
-        return x, None
+        return frame, None
 
-    except Exception as e:
-        print(f"ERROR CONEXIÓN [{sym}]: {type(e).__name__}: {e}")
-        return None, f"{type(e).__name__}: {e}"
+    except Exception as error:
+        reason = f"{type(error).__name__}: {error}"
+        print(f"ERROR CONEXIÓN [{symbol}]: {reason}")
+        return None, reason
 
-def calc(x):
-    x=x.copy(); c=x.close
-    x["sma20"]=c.rolling(20).mean(); x["sma50"]=c.rolling(50).mean(); x["sma200"]=c.rolling(200).mean()
-    delta=c.diff(); gain=delta.clip(lower=0); loss=-delta.clip(upper=0)
-    ag=gain.ewm(alpha=1/14,min_periods=14,adjust=False).mean()
-    al=loss.ewm(alpha=1/14,min_periods=14,adjust=False).mean()
-    x["rsi"]=100-100/(1+ag/al.replace(0,np.nan))
-    x["macd"]=c.ewm(span=12,adjust=False).mean()-c.ewm(span=26,adjust=False).mean()
-    x["signal"]=x.macd.ewm(span=9,adjust=False).mean()
-    x["hist"]=x.macd-x.signal
-    x["mom3"]=c/c.shift(63)-1; x["mom6"]=c/c.shift(126)-1; x["mom12"]=c/c.shift(252)-1
-    x["rvol"]=x.volume/x.volume.rolling(20).mean()
-    return x
 
-def fundamental_analysis(sym):
+def calc(frame):
+    frame = frame.copy()
+    close = frame["close"]
+
+    frame["sma20"] = close.rolling(20).mean()
+    frame["sma50"] = close.rolling(50).mean()
+    frame["sma200"] = close.rolling(200).mean()
+
+    delta = close.diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+    avg_gain = gain.ewm(alpha=1 / 14, min_periods=14, adjust=False).mean()
+    avg_loss = loss.ewm(alpha=1 / 14, min_periods=14, adjust=False).mean()
+    relative_strength = avg_gain / avg_loss.replace(0, np.nan)
+    frame["rsi"] = 100 - 100 / (1 + relative_strength)
+
+    frame["macd"] = (
+        close.ewm(span=12, adjust=False).mean()
+        - close.ewm(span=26, adjust=False).mean()
+    )
+    frame["signal"] = frame["macd"].ewm(span=9, adjust=False).mean()
+    frame["hist"] = frame["macd"] - frame["signal"]
+
+    frame["mom3"] = close / close.shift(63) - 1
+    frame["mom6"] = close / close.shift(126) - 1
+    frame["mom12"] = close / close.shift(252) - 1
+
+    if frame["volume"].notna().any():
+        average_volume = frame["volume"].rolling(20).mean()
+        frame["rvol"] = frame["volume"] / average_volume.replace(0, np.nan)
+    else:
+        frame["rvol"] = np.nan
+
+    return frame
+
+
+def fundamental_analysis(symbol):
+    """Filtro orientativo; no sustituye análisis por sector ni revisión manual."""
     try:
-        t = yf.Ticker(sym)
-        info = t.info or {}
+        info = yf.Ticker(symbol).info or {}
 
         def number(key):
             value = info.get(key)
@@ -104,18 +180,17 @@ def fundamental_analysis(sym):
             "price_to_book": number("priceToBook"),
         }
 
-        score = 0
-        available = 0
-
         checks = [
-            ("roe", lambda v: v >= 0.15, 20),
-            ("profit_margin", lambda v: v >= 0.10, 20),
-            ("revenue_growth", lambda v: v > 0, 15),
-            ("debt_equity", lambda v: v <= 100, 15),
-            ("pe", lambda v: 0 < v <= 25, 15),
-            ("price_to_book", lambda v: 0 < v <= 5, 15),
+            ("roe", lambda value: value >= 0.15, 20),
+            ("profit_margin", lambda value: value >= 0.10, 20),
+            ("revenue_growth", lambda value: value > 0, 15),
+            ("debt_equity", lambda value: value <= 100, 15),
+            ("pe", lambda value: 0 < value <= 25, 15),
+            ("price_to_book", lambda value: 0 < value <= 5, 15),
         ]
 
+        score = 0
+        available = 0
         for key, test, points in checks:
             value = metrics[key]
             if value is not None:
@@ -144,42 +219,112 @@ def fundamental_analysis(sym):
             "metrics": metrics,
         }
 
-    except Exception as e:
-        print(f"Error fundamental {sym}: {e}")
+    except Exception as error:
+        print(f"Error fundamental {symbol}: {error}")
         return {
             "status": "ERROR AL CONSULTAR FUNDAMENTALES",
             "score": None,
             "coverage": 0,
             "metrics": {},
         }
-        
-def conditions(r):
-    return bool(r["close"]>r["sma50"]>r["sma200"] and 52<=r["rsi"]<=68 and r["macd"]>r["signal"] and r["hist"]>0 and r["mom6"]>0 and r["rvol"]>=1.1)
-    
-def telegram(msg):
-    if not (TG_TOKEN and TG_CHAT): return
-    try: requests.post(f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",json={"chat_id":TG_CHAT,"text":msg[:4000]},timeout=20)
-    except Exception as e: print("Telegram error:",e)
+
+
+def conditions(row):
+    required = ["close", "sma50", "sma200", "rsi", "macd", "signal", "hist", "mom6", "rvol"]
+    if any(pd.isna(row.get(key)) for key in required):
+        return False
+    return bool(
+        row["close"] > row["sma50"] > row["sma200"]
+        and 52 <= row["rsi"] <= 68
+        and row["macd"] > row["signal"]
+        and row["hist"] > 0
+        and row["mom6"] > 0
+        and row["rvol"] >= 1.1
+    )
+
+
+def telegram(message):
+    if not (TG_TOKEN and TG_CHAT):
+        print("Telegram no configurado; se omite el envío.")
+        return False
+
+    try:
+        response = requests.post(
+            f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
+            json={"chat_id": TG_CHAT, "text": message[:4000]},
+            timeout=20,
+        )
+        if not response.ok:
+            print(f"Telegram HTTP {response.status_code}: {response.text[:300]}")
+            return False
+        result = response.json()
+        if not result.get("ok", False):
+            print(f"Telegram informó de un error: {result}")
+            return False
+        return True
+    except Exception as error:
+        print(f"Telegram error: {error}")
+        return False
+
+
+def pct(value):
+    return "N/D" if value is None or pd.isna(value) else f"{value * 100:+.1f}%"
+
+
+def metric_value(value, suffix=""):
+    if value is None:
+        return "N/D"
+    try:
+        if not np.isfinite(float(value)):
+            return "N/D"
+        return f"{float(value):.1f}{suffix}"
+    except (TypeError, ValueError):
+        return "N/D"
+
+
+def fundamentals_summary(fundamentals):
+    fundamentals = fundamentals or {}
+    metrics = fundamentals.get("metrics", {})
+    score = fundamentals.get("score")
+    score_text = f"{score}/100" if score is not None else "N/D"
+    coverage = fundamentals.get("coverage", 0)
+    return (
+        f"{fundamentals.get('status', 'SIN DATOS')}; puntuación {score_text}; "
+        f"datos disponibles {coverage}/100 puntos"
+    )
+
+
+def classify_weak(row):
+    fundamentals = row.get("fundamentals", {})
+    status = fundamentals.get("status", "")
+    score = fundamentals.get("score")
+    coverage = fundamentals.get("coverage", 0)
+
+    if status == "FUNDAMENTALES DÉBILES" and score is not None and coverage >= 80:
+        return "MAYOR RIESGO: debilidad técnica y fundamentales débiles"
+    if status == "FUNDAMENTALES FAVORABLES" and score is not None and coverage >= 80:
+        return "ESTUDIAR: debilidad técnica con fundamentales favorables"
+    return "VIGILAR: confirmar fundamentales/datos"
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--mode", choices=["full", "watch", "diagnostic"], default="full")
-    mode = ap.parse_args().mode
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", choices=["full", "watch", "diagnostic"], default="full")
+    mode = parser.parse_args().mode
 
     if not KEY:
-        print("Falta secreto TWELVE_DATA_API_KEY")
+        print("Falta el secreto TWELVE_DATA_API_KEY")
         return 2
 
-    s = load_state()
-    syms = universe()
+    state = load_state()
+    symbols = universe()
 
     if mode == "diagnostic":
-        syms = ["KO", "AAPL", "MSFT"]
+        symbols = ["KO", "AAPL", "MSFT"]
     elif mode == "watch":
-        syms = s.get("last_buy_candidates", [])[:100]
+        symbols = state.get("last_buy_candidates", [])[:100]
 
-    if not syms:
+    if not symbols:
         print("No hay candidatos guardados para revisar.")
         return 0
 
@@ -187,81 +332,223 @@ def main():
     errors = []
     alerts = []
     candidates = []
+    previous_keys = set(state.get("last_alert_keys", []))
 
-    prevkeys=set(s.get("last_alert_keys",[]))
-    for i,sym in enumerate(syms):
-        x,err=get_data(sym)
-        if err:
-            errors.append(f"{sym}: {err}")
-            print(f"ERROR API [{sym}]: {err}")
+    for index, symbol in enumerate(symbols):
+        frame, error = get_data(symbol)
+
+        if error:
+            errors.append(f"{symbol}: {error}")
         else:
-            x=calc(x); a=x.iloc[-1]; b=x.iloc[-2]
-            if pd.isna(a.sma200) or pd.isna(a.rsi) or pd.isna(a.rvol): errors.append(f"{sym}: indicadores incompletos")
+            frame = calc(frame)
+            if len(frame) < 2:
+                errors.append(f"{symbol}: no hay dos sesiones para comparar")
             else:
-                date=str(a.datetime.date())
-                buy=conditions(a) and conditions(b)
-                weak=(a.close<a.sma50 and a.macd<a.signal and a.mom3<0 and b.close<b.sma50 and b.macd<b.signal and b.mom3<0)
-                fund = fundamental_analysis(sym) if (buy or weak) else {"status": "NO CONSULTADO (sin señal técnica)", "score": None, "coverage": 0, "metrics": {}}
-                row={"symbol":sym,"date":date,"close":float(a.close),"sma50":float(a.sma50),"sma200":float(a.sma200),"rsi":float(a.rsi),"macd":float(a.macd),"signal":float(a.signal),"mom3":float(a.mom3),"mom6":float(a.mom6),"rvol":float(a.rvol),"buy":buy,"weak":weak,"fundamentals":fund}
-                rows.append(row)
-                if buy:
-                    candidates.append(sym); k=f"BUY:{sym}:{date}"
-                    if k not in prevkeys: alerts.append((k,"BUY",row))
-                if weak:
-                    k=f"WEAK:{sym}:{date}"
-                    if k not in prevkeys: alerts.append((k,"WEAK",row))
-        if i<len(syms)-1: time.sleep(DELAY)
-    now=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    buys=[r for r in rows if r["buy"]]; weak=[r for r in rows if r["weak"]]
-    lines=["# Informe bot bursátil S&P 500",f"- Ejecución: {now}",f"- Modo: {mode}",f"- Símbolos: {len(syms)}; con datos válidos: {len(rows)}; errores: {len(errors)}","","> Prototipo técnico y filtro fundamental orientativo. Los datos pueden faltar o ser incompletos; no emite compras/ventas confirmadas. Valida resultados, valoración y noticias antes de operar.","","## Candidatos técnicos (validación fundamental necesaria)"]
-    lines += [f"- **{r['symbol']}** cierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; SMA200 {r['sma200']:.2f}; RSI {r['rsi']:.1f}; MACD {r['macd']:.3f} vs señal {r['signal']:.3f}; momentum 6m {r['mom6']*100:+.1f}%; volumen relativo {r['rvol']:.2f}x; fundamentales: {r.get('fundamentals', {}).get('status', 'SIN DATOS')}; puntuación: {r.get('fundamentals', {}).get('score', 'N/D')}/100" for r in sorted(buys,key=lambda z:z["mom6"],reverse=True)[:50]] or ["Sin candidatos que cumplan todas las reglas en dos sesiones consecutivas."]
-    lines += ["","## Debilidad persistente (vigilancia, no orden de venta)"]
-    lines += [f"- **{r['symbol']}** cierre {r['close']:.2f}; RSI {r['rsi']:.1f}; momentum 3m {r['mom3']*100:+.1f}%; MACD bajo señal." for r in sorted(weak,key=lambda z:z["mom3"])[:50]] or ["Sin señales de debilidad persistente según estas reglas."]
-    if errors: lines += ["","## Errores (máximo 30)"]+[f"- {e}" for e in errors[:30]]
-    report="\n".join(lines)+"\n"; (REPORTS/"latest_report.md").write_text(report,encoding="utf-8")
-    (REPORTS/f"report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}_{mode}.md").write_text(report,encoding="utf-8")
-    keys=s.get("last_alert_keys",[])
-    for k,kind,r in alerts:
-        if kind=="BUY":
-            f=r.get("fundamentals", {})
-            nota=f"Fundamentales: {f.get('status', 'SIN DATOS')}; puntuación {f.get('score')}/100; cobertura {f.get('coverage', 0)}/100 puntos." if f.get("score") is not None else f"Fundamentales: {f.get('status', 'SIN DATOS')}; sin puntuación fiable."
-            msg=f"🟡 CANDIDATO TÉCNICO — NO COMPRA CONFIRMADA: {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50/200 {r['sma50']:.2f}/{r['sma200']:.2f}; RSI {r['rsi']:.1f}; MACD {r['macd']:.3f} > señal {r['signal']:.3f}; momentum 6m {r['mom6']*100:+.1f}%; volumen {r['rvol']:.2f}x.\n{nota}\nValidar resultados, valoración y noticias antes de decidir."
+                current = frame.iloc[-1]
+                previous = frame.iloc[-2]
+                required = [
+                    current.get("sma200"), current.get("rsi"), current.get("mom3"),
+                    current.get("mom6"), current.get("macd"), current.get("signal"),
+                ]
+
+                if any(pd.isna(value) for value in required):
+                    errors.append(f"{symbol}: indicadores incompletos")
+                else:
+                    date = str(current["datetime"].date())
+                    buy = conditions(current) and conditions(previous)
+                    weak = bool(
+                        current["close"] < current["sma50"]
+                        and current["macd"] < current["signal"]
+                        and current["mom3"] < 0
+                        and previous["close"] < previous["sma50"]
+                        and previous["macd"] < previous["signal"]
+                        and previous["mom3"] < 0
+                    )
+
+                    fundamentals = (
+                        fundamental_analysis(symbol)
+                        if buy or weak
+                        else {
+                            "status": "NO CONSULTADO (sin señal técnica)",
+                            "score": None,
+                            "coverage": 0,
+                            "metrics": {},
+                        }
+                    )
+
+                    row = {
+                        "symbol": symbol,
+                        "date": date,
+                        "close": float(current["close"]),
+                        "sma50": float(current["sma50"]),
+                        "sma200": float(current["sma200"]),
+                        "rsi": float(current["rsi"]),
+                        "macd": float(current["macd"]),
+                        "signal": float(current["signal"]),
+                        "mom3": float(current["mom3"]),
+                        "mom6": float(current["mom6"]),
+                        "rvol": (
+                            float(current["rvol"])
+                            if pd.notna(current["rvol"]) else None
+                        ),
+                        "buy": buy,
+                        "weak": weak,
+                        "fundamentals": fundamentals,
+                    }
+                    rows.append(row)
+
+                    if buy:
+                        candidates.append(symbol)
+                        alert_key = f"BUY:{symbol}:{date}"
+                        if alert_key not in previous_keys:
+                            alerts.append((alert_key, "BUY", row))
+                    if weak:
+                        alert_key = f"WEAK:{symbol}:{date}"
+                        if alert_key not in previous_keys:
+                            alerts.append((alert_key, "WEAK", row))
+
+        if index < len(symbols) - 1:
+            time.sleep(DELAY)
+
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    buys = [row for row in rows if row["buy"]]
+    weak_rows = [row for row in rows if row["weak"]]
+
+    lines = [
+        "# Informe bot bursátil S&P 500",
+        f"- Ejecución: {now}",
+        f"- Modo: {mode}",
+        f"- Símbolos: {len(symbols)}; con datos válidos: {len(rows)}; errores: {len(errors)}",
+        "",
+        "> Herramienta orientativa. Las señales no son órdenes de compra/venta. "
+        "La puntuación fundamental es simplificada, no está ajustada por sector y depende "
+        "de los datos disponibles. Revisa resultados, valoración, noticias y riesgos antes de operar.",
+        "",
+        "## Candidatos técnicos (no son compras confirmadas)",
+    ]
+
+    if buys:
+        for row in sorted(buys, key=lambda item: item["mom6"], reverse=True)[:50]:
+            volume = metric_value(row["rvol"], "x")
+            lines.append(
+                f"- **{row['symbol']}** cierre {row['close']:.2f}; "
+                f"SMA50 {row['sma50']:.2f}; SMA200 {row['sma200']:.2f}; "
+                f"RSI {row['rsi']:.1f}; MACD {row['macd']:.3f} vs señal {row['signal']:.3f}; "
+                f"momentum 6m {pct(row['mom6'])}; volumen relativo {volume}; "
+                f"fundamentales: {fundamentals_summary(row['fundamentals'])}."
+            )
+    else:
+        lines.append("Sin candidatos que cumplan todas las reglas en dos sesiones consecutivas.")
+
+    lines += [
+        "",
+        "## Debilidad persistente (vigilancia, no orden de venta)",
+        "",
+        "Clasificación orientativa; no implica que una acción esté barata ni que vaya a rebotar.",
+    ]
+
+    if weak_rows:
+        for row in sorted(weak_rows, key=lambda item: item["mom3"])[:50]:
+            fundamentals = row.get("fundamentals", {})
+            metrics = fundamentals.get("metrics", {})
+            lines.append(
+                f"- **{row['symbol']}** — {classify_weak(row)}. "
+                f"Cierre {row['close']:.2f}; RSI {row['rsi']:.1f}; "
+                f"momentum 3m {pct(row['mom3'])}; MACD bajo señal. "
+                f"Fundamentales: {fundamentals_summary(fundamentals)}. "
+                f"ROE {metric_value(metrics.get('roe'), '%')}; "
+                f"margen {metric_value(metrics.get('profit_margin'), '%')}; "
+                f"crecimiento ingresos {metric_value(metrics.get('revenue_growth'), '%')}; "
+                f"deuda/capital {metric_value(metrics.get('debt_equity'))}; "
+                f"PER {metric_value(metrics.get('pe'))}; "
+                f"precio/valor contable {metric_value(metrics.get('price_to_book'))}."
+            )
+    else:
+        lines.append("Sin señales de debilidad persistente según estas reglas.")
+
+    if errors:
+        lines += ["", "## Errores (máximo 30)"]
+        lines += [f"- {error}" for error in errors[:30]]
+
+    report = "\n".join(lines) + "\n"
+    (REPORTS / "latest_report.md").write_text(report, encoding="utf-8")
+    report_name = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M")
+    (REPORTS / f"report_{report_name}_{mode}.md").write_text(report, encoding="utf-8")
+
+    keys = list(state.get("last_alert_keys", []))
+    sent_count = 0
+    for alert_key, kind, row in alerts:
+        fund = row.get("fundamentals", {})
+        if kind == "BUY":
+            msg = (
+                f"🟡 CANDIDATO TÉCNICO — NO COMPRA CONFIRMADA: {row['symbol']} ({row['date']})\n"
+                f"Cierre {row['close']:.2f}; SMA50/200 {row['sma50']:.2f}/{row['sma200']:.2f}; "
+                f"RSI {row['rsi']:.1f}; MACD {row['macd']:.3f} vs señal {row['signal']:.3f}; "
+                f"momentum 6m {pct(row['mom6'])}; volumen {metric_value(row['rvol'], 'x')}.\n"
+                f"Fundamentales: {fundamentals_summary(fund)}.\n"
+                "Revisar valoración, resultados y noticias antes de decidir."
+            )
         else:
-            f=r.get("fundamentals", {})
-            msg=f"⚠️ VIGILANCIA TÉCNICA (no orden de venta): {r['symbol']} ({r['date']})\nCierre {r['close']:.2f}; SMA50 {r['sma50']:.2f}; RSI {r['rsi']:.1f}; MACD bajo señal; momentum 3m {r['mom3']*100:+.1f}%.\nFundamentales: {f.get('status', 'SIN DATOS')}; puntuación {f.get('score') if f.get('score') is not None else 'N/D'}/100.\nRevisar soporte y fundamentales; no vender solo por esta alerta."
-        telegram(msg); keys.append(k)
-    s["last_alert_keys"]=keys[-2000:]; s["last_buy_candidates"]=candidates[:100]; s["last_scan"]=now; save_state(s)
-    resumen = (
+            metrics = fund.get("metrics", {})
+            msg = (
+                f"⚠️ VIGILANCIA TÉCNICA (no orden de venta): {row['symbol']} ({row['date']})\n"
+                f"Cierre {row['close']:.2f}; SMA50 {row['sma50']:.2f}; RSI {row['rsi']:.1f}; "
+                f"momentum 3m {pct(row['mom3'])}; MACD bajo señal.\n"
+                f"Clasificación orientativa: {classify_weak(row)}.\n"
+                f"Fundamentales: {fundamentals_summary(fund)}.\n"
+                f"ROE {metric_value(metrics.get('roe'), '%')}; "
+                f"margen {metric_value(metrics.get('profit_margin'), '%')}; "
+                f"crecimiento ingresos {metric_value(metrics.get('revenue_growth'), '%')}.\n"
+                "No vender ni comprar solo por esta alerta."
+            )
+
+        if telegram(msg):
+            sent_count += 1
+        keys.append(alert_key)
+
+    state["last_alert_keys"] = keys[-2000:]
+    state["last_buy_candidates"] = candidates[:100]
+    state["last_scan"] = now
+    save_state(state)
+
+    summary = (
         f"📊 RESUMEN S&P 500\n"
         f"Modo: {mode}\n"
-        f"Acciones con datos válidos: {len(rows)}/{len(syms)}\n"
+        f"Acciones con datos válidos: {len(rows)}/{len(symbols)}\n"
         f"Errores: {len(errors)}\n"
         f"Candidatos técnicos: {len(buys)}\n"
-        f"Señales de debilidad: {len(weak)}\n"
+        f"Señales de debilidad: {len(weak_rows)}\n"
+        f"Alertas nuevas detectadas: {len(alerts)}\n"
         f"Fecha: {now}\n\n"
-        "Los candidatos requieren validar fundamentales, valoración y noticias. "
-        "No son órdenes de compra ni de venta."
+        "Consulta reports/latest_report.md para el detalle. "
+        "Las señales son informativas, no órdenes de compra o venta."
     )
-    telegram(resumen)
-    print(resumen)
-    if errors and len(rows)<max(20,int(len(syms)*.5)):
+
+    # Se conserva el resumen en cada ejecución para confirmar que el bot terminó.
+    telegram(summary)
+    print(summary)
+    print(f"Alertas nuevas procesadas: {len(alerts)}; mensajes de alerta enviados: {sent_count}")
+
+    if errors and len(rows) < max(20, int(len(symbols) * 0.5)):
         print("ATENCIÓN: escaneo incompleto; ausencia de alertas no significa ausencia de oportunidades.")
-    return 0 if len(rows)>=max(1,int(len(syms)*.5)) else 2
+
+    return 0 if len(rows) >= max(1, int(len(symbols) * 0.5)) else 2
+
 
 if __name__ == "__main__":
-    test_mode = os.getenv("TEST_FUNDAMENTALS") == "1"
-    test_api = os.getenv("TEST_API") == "1"
-
-    if test_api:
+    if os.getenv("TEST_API") == "1":
+        if not KEY:
+            print("Falta el secreto TWELVE_DATA_API_KEY")
+            sys.exit(2)
         print("PRUEBA API TWELVE DATA: KO")
         data, error = get_data("KO")
         if error:
             print(f"ERROR KO: {error}")
-        else:
-            print(f"OK KO: {len(data)} filas")
-            print(f"Última fecha: {data['datetime'].iloc[-1]}")
-            print(f"Último cierre: {data['close'].iloc[-1]}")
-    elif test_mode:
+            sys.exit(2)
+        print(f"OK KO: {len(data)} filas")
+        print(f"Última fecha: {data['datetime'].iloc[-1]}")
+        print(f"Último cierre: {data['close'].iloc[-1]}")
+    elif os.getenv("TEST_FUNDAMENTALS") == "1":
         result = fundamental_analysis("KO")
         print("PRUEBA FUNDAMENTALES COCA-COLA")
         print(json.dumps(result, indent=2, ensure_ascii=False))
