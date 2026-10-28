@@ -186,7 +186,9 @@ def main():
     prevkeys=set(s.get("last_alert_keys",[]))
     for i,sym in enumerate(syms):
         x,err=get_data(sym)
-        if err: errors.append(f"{sym}: {err}")
+        if err:
+            errors.append(f"{sym}: {err}")
+            print(f"ERROR API [{sym}]: {err}")
         else:
             x=calc(x); a=x.iloc[-1]; b=x.iloc[-2]
             if pd.isna(a.sma200) or pd.isna(a.rsi) or pd.isna(a.rvol): errors.append(f"{sym}: indicadores incompletos")
