@@ -12,6 +12,7 @@ on:
         options:
           - full
           - watch
+          - diagnostic
   schedule:
     - cron: "0 22 * * 1-5"
 
