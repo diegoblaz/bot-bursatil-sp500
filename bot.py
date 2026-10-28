@@ -242,10 +242,21 @@ def main():
     return 0 if len(rows)>=max(1,int(len(syms)*.5)) else 2
 
 if __name__ == "__main__":
-    if os.getenv("TEST_FUNDAMENTALS") == "1":
+    test_mode = os.getenv("TEST_FUNDAMENTALS") == "1"
+    test_api = os.getenv("TEST_API") == "1"
+
+    if test_api:
+        print("PRUEBA API TWELVE DATA: KO")
+        data, error = get_data("KO")
+        if error:
+            print(f"ERROR KO: {error}")
+        else:
+            print(f"OK KO: {len(data)} filas")
+            print(f"Última fecha: {data['datetime'].iloc[-1]}")
+            print(f"Último cierre: {data['close'].iloc[-1]}")
+    elif test_mode:
         result = fundamental_analysis("KO")
         print("PRUEBA FUNDAMENTALES COCA-COLA")
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
         sys.exit(main())
-    
