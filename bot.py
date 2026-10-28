@@ -29,16 +29,57 @@ def universe():
     return list(dict.fromkeys(t["Symbol"].astype(str).str.strip().str.replace(".","-",regex=False).tolist()))[:505]
 
 def get_data(sym):
-    r=requests.get("https://api.twelvedata.com/time_series",params={"symbol":sym,"interval":"1day","outputsize":260,"apikey":KEY},timeout=30)
-    d=r.json()
-    if r.status_code!=200 or "values" not in d: return None, d.get("message",str(d.get("code","API error")))
-    x=pd.DataFrame(d["values"])
-    if x.empty: return None,"sin datos"
-    for c in ["open","high","low","close","volume"]: x[c]=pd.to_numeric(x[c],errors="coerce")
-    x["datetime"]=pd.to_datetime(x["datetime"],errors="coerce")
-    x=x.dropna(subset=["datetime","close"]).sort_values("datetime").reset_index(drop=True)
-    if len(x)<205: return None,f"histórico insuficiente: {len(x)}"
-    return x,None
+    try:
+        r = requests.get(
+            "https://api.twelvedata.com/time_series",
+            params={
+                "symbol": sym,
+                "interval": "1day",
+                "outputsize": 260,
+                "apikey": KEY,
+            },
+            timeout=30,
+        )
+
+        try:
+            d = r.json()
+        except ValueError:
+            return None, f"respuesta no JSON (HTTP {r.status_code})"
+
+        if r.status_code != 200 or "values" not in d:
+            motivo = d.get("message", str(d.get("code", "API error")))
+            return None, f"HTTP {r.status_code}: {motivo}"
+
+        x = pd.DataFrame(d["values"])
+
+        if x.empty:
+            return None, "sin datos"
+
+        for c in ["open", "high", "low", "close", "volume"]:
+            if c in x.columns:
+                x[c] = pd.to_numeric(x[c], errors="coerce")
+            elif c != "volume":
+                return None, f"falta columna {c}"
+
+        if "volume" not in x.columns:
+            x["volume"] = np.nan
+
+        x["datetime"] = pd.to_datetime(x["datetime"], errors="coerce")
+        x = x.dropna(subset=["datetime", "close"]).sort_values(
+            "datetime"
+        ).reset_index(drop=True)
+
+        if len(x) < 205:
+            return None, f"histórico insuficiente: {len(x)}"
+
+        return x, None
+
+    except requests.exceptions.Timeout:
+        return None, "timeout de conexión"
+    except requests.exceptions.RequestException as e:
+        return None, f"error de conexión: {e}"
+    except Exception as e:
+        return None, f"error inesperado: {type(e).__name__}: {e}"
 
 def calc(x):
     x=x.copy(); c=x.close
