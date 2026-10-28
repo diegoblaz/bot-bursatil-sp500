@@ -1,7 +1,5 @@
 {
-  "last_buy_candidates": [
-    "CNC"
-  ],
+  "last_buy_candidates": [],
   "last_alert_keys": [
     "WEAK:AKAM:2026-10-26",
     "WEAK:GOOGL:2026-10-26",
@@ -98,5 +96,5 @@
     "WEAK:WAB:2026-10-27"
   ],
   "last_prices": {},
-  "last_scan": "2026-10-28 00:14 UTC"
+  "last_scan": "2026-10-28 12:59 UTC"
 }
