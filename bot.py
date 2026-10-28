@@ -176,13 +176,33 @@ def telegram(msg):
     try: requests.post(f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",json={"chat_id":TG_CHAT,"text":msg[:4000]},timeout=20)
     except Exception as e: print("Telegram error:",e)
 
+
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument("--mode",choices=["full","watch"],default="full"); mode=ap.parse_args().mode
-    if not KEY: print("Falta secreto TWELVE_DATA_API_KEY"); return 2
-    s=load_state(); syms=universe()
-    if mode=="watch": syms=s.get("last_buy_candidates",[])[:100]
-    if not syms: print("No hay candidatos guardados para revisar."); return 0
-    rows=[]; errors=[]; alerts=[]; candidates=[]
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--mode", choices=["full", "watch", "diagnostic"], default="full")
+    mode = ap.parse_args().mode
+
+    if not KEY:
+        print("Falta secreto TWELVE_DATA_API_KEY")
+        return 2
+
+    s = load_state()
+    syms = universe()
+
+    if mode == "diagnostic":
+        syms = ["KO", "AAPL", "MSFT"]
+    elif mode == "watch":
+        syms = s.get("last_buy_candidates", [])[:100]
+
+    if not syms:
+        print("No hay candidatos guardados para revisar.")
+        return 0
+
+    rows = []
+    errors = []
+    alerts = []
+    candidates = []
+
     prevkeys=set(s.get("last_alert_keys",[]))
     for i,sym in enumerate(syms):
         x,err=get_data(sym)
