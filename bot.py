@@ -73,10 +73,12 @@ def universe():
 
 def get_data(symbol):
     try:
+        # Twelve Data usa punto para estas dos clases de acciones.
+        api_symbol = {"BRK-B": "BRK.B", "BF-B": "BF.B"}.get(symbol, symbol)
         response = requests.get(
             "https://api.twelvedata.com/time_series",
             params={
-                "symbol": symbol,
+                "symbol": api_symbol,
                 "interval": "1day",
                 "outputsize": 260,
                 "apikey": KEY,
@@ -205,7 +207,7 @@ def fundamental_analysis(symbol):
             final_score = round(score / available * 100)
             if available < 80:
                 status = "DATOS INSUFICIENTES"
-            elif final_score >= 70:
+            elif final_score >= 80:
                 status = "FUNDAMENTALES FAVORABLES"
             elif final_score >= 45:
                 status = "FUNDAMENTALES MIXTOS"
@@ -278,6 +280,19 @@ def metric_value(value, suffix=""):
         if not np.isfinite(float(value)):
             return "N/D"
         return f"{float(value):.1f}{suffix}"
+    except (TypeError, ValueError):
+        return "N/D"
+
+
+def ratio_percent(value):
+    """Yahoo Finance expresa ROE, márgenes y crecimiento como fracciones (0.25 = 25%)."""
+    if value is None:
+        return "N/D"
+    try:
+        numeric = float(value)
+        if not np.isfinite(numeric):
+            return "N/D"
+        return f"{numeric * 100:.1f}%"
     except (TypeError, ValueError):
         return "N/D"
 
@@ -456,9 +471,9 @@ def main():
                 f"Cierre {row['close']:.2f}; RSI {row['rsi']:.1f}; "
                 f"momentum 3m {pct(row['mom3'])}; MACD bajo señal. "
                 f"Fundamentales: {fundamentals_summary(fundamentals)}. "
-                f"ROE {metric_value(metrics.get('roe'), '%')}; "
-                f"margen {metric_value(metrics.get('profit_margin'), '%')}; "
-                f"crecimiento ingresos {metric_value(metrics.get('revenue_growth'), '%')}; "
+                f"ROE {ratio_percent(metrics.get('roe'))}; "
+                f"margen {ratio_percent(metrics.get('profit_margin'))}; "
+                f"crecimiento ingresos {ratio_percent(metrics.get('revenue_growth'))}; "
                 f"deuda/capital {metric_value(metrics.get('debt_equity'))}; "
                 f"PER {metric_value(metrics.get('pe'))}; "
                 f"precio/valor contable {metric_value(metrics.get('price_to_book'))}."
@@ -496,9 +511,9 @@ def main():
                 f"momentum 3m {pct(row['mom3'])}; MACD bajo señal.\n"
                 f"Clasificación orientativa: {classify_weak(row)}.\n"
                 f"Fundamentales: {fundamentals_summary(fund)}.\n"
-                f"ROE {metric_value(metrics.get('roe'), '%')}; "
-                f"margen {metric_value(metrics.get('profit_margin'), '%')}; "
-                f"crecimiento ingresos {metric_value(metrics.get('revenue_growth'), '%')}.\n"
+                f"ROE {ratio_percent(metrics.get('roe'))}; "
+                f"margen {ratio_percent(metrics.get('profit_margin'))}; "
+                f"crecimiento ingresos {ratio_percent(metrics.get('revenue_growth'))}.\n"
                 "No vender ni comprar solo por esta alerta."
             )
 
