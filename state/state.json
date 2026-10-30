@@ -2,10 +2,14 @@
   "last_buy_candidates": [
     "AWK",
     "AJG",
+    "ADP",
     "AVY",
     "BDX",
     "EG",
-    "IFF"
+    "IFF",
+    "TYL",
+    "V",
+    "WTW"
   ],
   "last_alert_keys": [
     "WEAK:AKAM:2026-10-26",
@@ -202,8 +206,12 @@
     "BUY:AVY:2026-10-29",
     "BUY:BDX:2026-10-29",
     "BUY:EG:2026-10-29",
-    "BUY:IFF:2026-10-29"
+    "BUY:IFF:2026-10-29",
+    "BUY:ADP:2026-10-29",
+    "BUY:TYL:2026-10-29",
+    "BUY:V:2026-10-29",
+    "BUY:WTW:2026-10-29"
   ],
   "last_prices": {},
-  "last_scan": "2026-10-29 23:36 UTC"
+  "last_scan": "2026-10-30 09:21 UTC"
 }
