@@ -7,14 +7,8 @@
     "KO",
     "DRI",
     "EW",
-    "GDDY",
-    "LYV",
-    "PFE",
-    "SJM",
-    "SYF",
-    "VRTX",
-    "WTW",
-    "ZBH"
+    "JKHY",
+    "LYV"
   ],
   "last_alert_keys": [
     "WEAK:AKAM:2026-10-26",
@@ -464,8 +458,9 @@
     "BUY:WTW:2026-11-03",
     "WEAK:XYL:2026-11-03",
     "WEAK:ZBRA:2026-11-03",
-    "BUY:ZBH:2026-11-03"
+    "BUY:ZBH:2026-11-03",
+    "BUY:JKHY:2026-11-03"
   ],
   "last_prices": {},
-  "last_scan": "2026-11-03 22:37 UTC"
+  "last_scan": "2026-11-03 23:48 UTC"
 }
