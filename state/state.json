@@ -1,22 +1,25 @@
 {
   "last_buy_candidates": [
+    "AMCR",
+    "BALL",
+    "BAX",
+    "BBY",
+    "BMY",
+    "BF-B",
+    "BXP",
+    "KO",
+    "CL",
     "CSX",
+    "DAL",
     "DG",
-    "FDS",
+    "FAST",
     "FOXA",
+    "FOX",
     "GPN",
+    "DOC",
     "JNJ",
-    "KHC",
-    "MDLZ",
-    "MNST",
-    "PGR",
-    "SJM",
-    "SW",
-    "TGT",
-    "UHS",
-    "VRTX",
-    "WFC",
-    "WELL"
+    "KDP",
+    "KHC"
   ],
   "last_alert_keys": [
     "WEAK:AKAM:2026-10-26",
@@ -623,8 +626,22 @@
     "BUY:WELL:2026-11-05",
     "WEAK:WDC:2026-11-05",
     "WEAK:WMB:2026-11-05",
-    "WEAK:ZBRA:2026-11-05"
+    "WEAK:ZBRA:2026-11-05",
+    "BUY:AMCR:2026-11-05",
+    "BUY:BALL:2026-11-05",
+    "BUY:BAX:2026-11-05",
+    "BUY:BBY:2026-11-05",
+    "BUY:BMY:2026-11-05",
+    "BUY:BF-B:2026-11-05",
+    "BUY:BXP:2026-11-05",
+    "BUY:KO:2026-11-05",
+    "BUY:CL:2026-11-05",
+    "BUY:DAL:2026-11-05",
+    "BUY:FAST:2026-11-05",
+    "BUY:FOX:2026-11-05",
+    "BUY:DOC:2026-11-05",
+    "BUY:KDP:2026-11-05"
   ],
   "last_prices": {},
-  "last_scan": "2026-11-05 22:22 UTC"
+  "last_scan": "2026-11-05 23:44 UTC"
 }
