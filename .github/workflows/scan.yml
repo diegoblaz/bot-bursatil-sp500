@@ -13,8 +13,12 @@ on:
           - full
           - watch
           - diagnostic
+
   schedule:
-    - cron: "0 22 * * 1-5"
+    # 20:00 UTC en verano y 21:00 UTC en invierno.
+    # El paso de comprobación selecciona la ejecución de las 22:00 de Madrid.
+    - cron: "0 20 * * *"
+    - cron: "0 21 * * *"
 
 permissions:
   contents: write
@@ -27,21 +31,44 @@ jobs:
   analizar:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+
     steps:
+      - name: Comprobar horario de Madrid
+        id: horario
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          HORA=$(TZ=Europe/Madrid date +%H)
+
+          if [ "$HORA" = "22" ]; then
+            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
+            echo "Ejecución válida: 22:00 hora de Madrid."
+          else
+            echo "ejecutar=false" >> "$GITHUB_OUTPUT"
+            echo "Ejecución omitida: no son las 22:00 de Madrid."
+          fi
+
       - name: Descargar repositorio
+        if: steps.horario.outputs.ejecutar == 'true'
         uses: actions/checkout@v4
         with:
           ref: main
 
       - name: Preparar Python
+        if: steps.horario.outputs.ejecutar == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Instalar dependencias
+        if: steps.horario.outputs.ejecutar == 'true'
         run: pip install -r requirements.txt
 
       - name: Ejecutar bot
+        if: steps.horario.outputs.ejecutar == 'true'
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -49,18 +76,18 @@ jobs:
           TEST_FUNDAMENTALS: ${{ vars.TEST_FUNDAMENTALS }}
           TEST_API: ${{ vars.TEST_API }}
         run: |
-            if [ "$TEST_API" = "1" ]; then
-              python bot.py
-            elif [ "${{ inputs.modo }}" = "watch" ]; then
-              python bot.py --mode watch
-            elif [ "${{ inputs.modo }}" = "diagnostic" ]; then
-              python bot.py --mode diagnostic
-            else
-              python bot.py --mode full
-            fi
-        
+          if [ "$TEST_API" = "1" ]; then
+            python bot.py
+          elif [ "${{ inputs.modo }}" = "watch" ]; then
+            python bot.py --mode watch
+          elif [ "${{ inputs.modo }}" = "diagnostic" ]; then
+            python bot.py --mode diagnostic
+          else
+            python bot.py --mode full
+          fi
+
       - name: Guardar informes y estado
-        if: always()
+        if: always() && steps.horario.outputs.ejecutar == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
