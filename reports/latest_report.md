@@ -1,5 +1,5 @@
 # Informe bot bursátil — S&P 500, CAC 40, IBEX 35 y DAX 40
-- Ejecución: 2026-11-07 21:18 CET
+- Ejecución: 2026-11-07 22:36 CET
 - Modo: full
 - Universo solicitado: 618
 - Valores con datos válidos: 615
