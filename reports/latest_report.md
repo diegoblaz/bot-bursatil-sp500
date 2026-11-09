@@ -1,14 +1,14 @@
 # Informe bot bursátil — S&P 500, CAC 40, IBEX 35 y DAX 40
-- Ejecución: 2026-11-09 22:30 CET
+- Ejecución: 2026-11-09 22:49 CET
 - Modo: full
 - Universo solicitado: 618
-- Valores con datos válidos: 614
-- Errores o datos incompletos: 4
+- Valores con datos válidos: 615
+- Errores o datos incompletos: 3
 
 > Informe cuantitativo orientativo. Las señales y puntuaciones no son órdenes de compra o venta. La puntuación fundamental es simplificada, depende de la disponibilidad de Yahoo Finance y no está ajustada por sector. Comprueba resultados, noticias, valoración, divisa y riesgos antes de operar.
 
 ## Cobertura por índice
-- **S&P 500**: 499/503 valores con datos válidos.
+- **S&P 500**: 500/503 valores con datos válidos.
 - **CAC 40**: 40/40 valores con datos válidos.
 - **IBEX 35**: 35/35 valores con datos válidos.
 - **DAX 40**: 40/40 valores con datos válidos.
@@ -27,21 +27,22 @@
 11. **BEN** (S&P 500) — puntuación 100/100; cierre 35.87; RSI 68.0; momentum 6m +16.0%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
 12. **HLT** (S&P 500) — puntuación 100/100; cierre 373.23; RSI 69.1; momentum 6m +18.4%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
 13. **KMB** (S&P 500) — puntuación 100/100; cierre 111.93; RSI 61.6; momentum 6m +19.9%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
-14. **LLY** (S&P 500) — puntuación 100/100; cierre 1411.95; RSI 67.9; momentum 6m +46.5%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
-15. **MAR** (S&P 500) — puntuación 100/100; cierre 417.16; RSI 69.8; momentum 6m +18.5%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
-16. **MAS** (S&P 500) — puntuación 100/100; cierre 85.92; RSI 69.4; momentum 6m +23.3%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
-17. **NEM** (S&P 500) — puntuación 100/100; cierre 125.16; RSI 62.6; momentum 6m +4.2%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
-18. **OMC** (S&P 500) — puntuación 100/100; cierre 88.50; RSI 68.5; momentum 6m +20.2%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
-19. **TGT** (S&P 500) — puntuación 100/100; cierre 165.90; RSI 61.9; momentum 6m +42.5%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
-20. **ULTA** (S&P 500) — puntuación 100/100; cierre 665.13; RSI 68.8; momentum 6m +29.9%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
+14. **MAR** (S&P 500) — puntuación 100/100; cierre 417.16; RSI 69.8; momentum 6m +18.5%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
+15. **MAS** (S&P 500) — puntuación 100/100; cierre 85.92; RSI 69.4; momentum 6m +23.3%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
+16. **NEM** (S&P 500) — puntuación 100/100; cierre 125.16; RSI 62.6; momentum 6m +4.2%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
+17. **OMC** (S&P 500) — puntuación 100/100; cierre 88.50; RSI 68.5; momentum 6m +20.2%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
+18. **TGT** (S&P 500) — puntuación 100/100; cierre 165.90; RSI 61.9; momentum 6m +42.5%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
+19. **ULTA** (S&P 500) — puntuación 100/100; cierre 665.13; RSI 68.8; momentum 6m +29.9%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
+20. **GWW** (S&P 500) — puntuación 100/100; cierre 1447.67; RSI 67.3; momentum 6m +18.3%; fundamentales: NO CONSULTADO (sin señal técnica); puntuación N/D; cobertura 0/100.
 
 ## Candidatos técnicos (no son compras confirmadas)
 - **FOXA** (S&P 500) — puntuación 100.0/100; cierre 67.69; SMA50 64.84; SMA200 61.80; RSI 56.7; MACD 0.823 vs señal 0.516; momentum 6m +0.4%; volumen relativo 1.11x; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 100/100; cobertura 100/100.
 - **HNR1.DE** (DAX 40) — puntuación 94.8/100; cierre 289.00; SMA50 266.85; SMA200 250.37; RSI 59.4; MACD 8.668 vs señal 8.152; momentum 6m +21.7%; volumen relativo 1.16x; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 85/100; cobertura 100/100.
 - **IAG.MC** (IBEX 35) — puntuación 92.7/100; cierre 5.39; SMA50 4.98; SMA200 4.84; RSI 65.6; MACD 0.060 vs señal 0.007; momentum 6m +25.9%; volumen relativo 1.95x; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 79/100; cobertura 70/100.
 - **ABNB** (S&P 500) — puntuación 91.2/100; cierre 190.29; SMA50 169.09; SMA200 148.07; RSI 66.4; MACD 3.636 vs señal 1.673; momentum 6m +38.8%; volumen relativo 1.31x; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 75/100; cobertura 100/100.
+- **LLY** (S&P 500) — puntuación 91.2/100; cierre 1411.95; SMA50 1219.00; SMA200 1099.57; RSI 67.9; MACD 54.120 vs señal 49.105; momentum 6m +46.5%; volumen relativo 1.23x; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 75/100; cobertura 100/100.
 - **RSG** (S&P 500) — puntuación 91.2/100; cierre 246.78; SMA50 225.09; SMA200 216.67; RSI 66.2; MACD 7.032 vs señal 6.431; momentum 6m +25.6%; volumen relativo 1.16x; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 75/100; cobertura 100/100.
-- **DE** (S&P 500) — puntuación 86.0/100; cierre 691.28; SMA50 667.55; SMA200 607.07; RSI 62.5; MACD 5.141 vs señal 0.480; momentum 6m +18.0%; volumen relativo 1.45x; fundamentales: FUNDAMENTALES MIXTOS; puntuación 60/100; cobertura 100/100.
+- **DE** (S&P 500) — puntuación 86.0/100; cierre 691.28; SMA50 667.55; SMA200 607.07; RSI 62.5; MACD 5.141 vs señal 0.480; momentum 6m +18.0%; volumen relativo 1.34x; fundamentales: FUNDAMENTALES MIXTOS; puntuación 60/100; cobertura 100/100.
 - **XYZ** (S&P 500) — puntuación 84.2/100; cierre 88.56; SMA50 78.01; SMA200 71.69; RSI 67.7; MACD 2.049 vs señal 0.732; momentum 6m +21.0%; volumen relativo 1.19x; fundamentales: FUNDAMENTALES MIXTOS; puntuación 55/100; cobertura 100/100.
 
 ## Debilidad persistente (vigilancia, no orden de venta)
@@ -108,7 +109,6 @@ Clasificación orientativa; no implica que deba venderse una posición.
 - **ZBRA** (S&P 500) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 326.71; RSI 30.3; momentum 3m -14.7%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 100/100; cobertura 100/100; ROE 16.5%; margen 9.8%; crecimiento ingresos 22.3%; deuda/capital 77.80; PER 26.41.
 
 ## Errores y cobertura incompleta (máximo 100)
-- SP500 ABT: histórico insuficiente o formato de datos no reconocido
 - SP500 FDXF: histórico insuficiente o formato de datos no reconocido
 - SP500 HONA: histórico insuficiente o formato de datos no reconocido
 - SP500 VYLR: histórico insuficiente o formato de datos no reconocido

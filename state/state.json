@@ -18,6 +18,10 @@
     },
     {
       "market": "SP500",
+      "symbol": "LLY"
+    },
+    {
+      "market": "SP500",
       "symbol": "RSG"
     },
     {
@@ -996,8 +1000,9 @@
     "BUY:DAX40:HNR1.DE:2026-11-09",
     "WEAK:DAX40:IFX.DE:2026-11-09",
     "WEAK:DAX40:RHM.DE:2026-11-09",
-    "WEAK:DAX40:ENR.DE:2026-11-09"
+    "WEAK:DAX40:ENR.DE:2026-11-09",
+    "BUY:SP500:LLY:2026-11-09"
   ],
   "last_prices": {},
-  "last_scan": "2026-11-09 22:30 CET"
+  "last_scan": "2026-11-09 22:49 CET"
 }
