@@ -1,6 +1,10 @@
 {
   "last_buy_candidates": [
     {
+      "market": "SP500",
+      "symbol": "DE"
+    },
+    {
       "market": "IBEX35",
       "symbol": "LOG.MC"
     },
@@ -1318,8 +1322,9 @@
     "BUY:DAX40:G1A.DE:2026-11-13",
     "WEAK:DAX40:PAH3.DE:2026-11-13",
     "WEAK:DAX40:RHM.DE:2026-11-13",
-    "BUY:DAX40:SIE.DE:2026-11-13"
+    "BUY:DAX40:SIE.DE:2026-11-13",
+    "BUY:SP500:DE:2026-11-13"
   ],
   "last_prices": {},
-  "last_scan": "2026-11-13 22:46 CET"
+  "last_scan": "2026-11-14 22:35 CET"
 }
