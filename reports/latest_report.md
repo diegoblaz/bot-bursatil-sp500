@@ -1,5 +1,5 @@
 # Informe bot bursátil — S&P 500, CAC 40, IBEX 35 y DAX 40
-- Ejecución: 2026-11-14 22:35 CET
+- Ejecución: 2026-11-15 22:36 CET
 - Modo: full
 - Universo solicitado: 618
 - Valores con datos válidos: 615
@@ -75,7 +75,7 @@ Clasificación orientativa; no implica que deba venderse una posición.
 - **ODFL** (S&P 500) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 174.54; RSI 47.1; momentum 3m -17.5%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 75/100; cobertura 100/100; ROE 26.0%; margen 20.1%; crecimiento ingresos 13.1%; deuda/capital 0.43; PER 31.34.
 - **HPE** (S&P 500) — VIGILAR: confirmar fundamentales/datos. Cierre 48.29; RSI 39.2; momentum 3m -16.0%; fundamentales: FUNDAMENTALES MIXTOS; puntuación 70/100; cobertura 100/100; ROE 10.9%; margen 6.7%; crecimiento ingresos 33.7%; deuda/capital 76.46; PER 24.89.
 - **COIN** (S&P 500) — VIGILAR: confirmar fundamentales/datos. Cierre 127.65; RSI 32.4; momentum 3m -15.2%; fundamentales: FUNDAMENTALES MIXTOS; puntuación 47/100; cobertura 85/100; ROE -4.7%; margen -12.9%; crecimiento ingresos -34.2%; deuda/capital 49.40; PER N/D.
-- **CSCO** (S&P 500) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 95.64; RSI 37.1; momentum 3m -15.0%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 90/100; cobertura 100/100; ROE 27.3%; margen 21.0%; crecimiento ingresos 17.6%; deuda/capital 62.02; PER 25.44.
+- **CSCO** (S&P 500) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 95.64; RSI 37.1; momentum 3m -15.0%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 90/100; cobertura 100/100; ROE 30.4%; margen 22.3%; crecimiento ingresos 24.4%; deuda/capital 57.74; PER 25.44.
 - **HO.PA** (CAC 40) — VIGILAR: confirmar fundamentales/datos. Cierre 227.10; RSI 46.8; momentum 3m -14.6%; fundamentales: FUNDAMENTALES MIXTOS; puntuación 70/100; cobertura 100/100; ROE 19.4%; margen 6.6%; crecimiento ingresos 6.7%; deuda/capital 69.54; PER 31.28.
 - **PANW** (S&P 500) — VIGILAR: confirmar fundamentales/datos. Cierre 322.24; RSI 38.6; momentum 3m -14.2%; fundamentales: FUNDAMENTALES MIXTOS; puntuación 45/100; cobertura 100/100; ROE 1.7%; margen 2.7%; crecimiento ingresos 34.5%; deuda/capital 9.34; PER 805.60.
 - **FCX** (S&P 500) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 59.24; RSI 36.9; momentum 3m -13.2%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 100/100; cobertura 100/100; ROE 15.7%; margen 13.0%; crecimiento ingresos 8.2%; deuda/capital 30.81; PER 24.89.
