@@ -1978,8 +1978,9 @@
     "WEAK:DAX40:RWE.DE:2026-11-20",
     "WEAK:DAX40:SAP.DE:2026-11-20",
     "WEAK:DAX40:SIE.DE:2026-11-20",
-    "WEAK:DAX40:VOW3.DE:2026-11-20"
+    "WEAK:DAX40:VOW3.DE:2026-11-20",
+    "WEAK:SP500:SNDK:2026-11-19"
   ],
   "last_prices": {},
-  "last_scan": "2026-11-20 22:50 CET"
+  "last_scan": "2026-11-21 22:41 CET"
 }
