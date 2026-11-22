@@ -1,5 +1,5 @@
 # Informe bot bursátil — S&P 500, CAC 40, IBEX 35 y DAX 40
-- Ejecución: 2026-11-21 22:41 CET
+- Ejecución: 2026-11-22 22:44 CET
 - Modo: full
 - Universo solicitado: 618
 - Valores con datos válidos: 615
@@ -52,7 +52,7 @@ Clasificación orientativa; no implica que deba venderse una posición.
 - **SKYD** (S&P 500) — VIGILAR: confirmar fundamentales/datos. Cierre 6.20; RSI 28.7; momentum 3m -39.8%; fundamentales: FUNDAMENTALES MIXTOS; puntuación 65/100; cobertura 85/100; ROE -1.7%; margen -1.0%; crecimiento ingresos 4.8%; deuda/capital 123.33; PER N/D.
 - **NVDA** (S&P 500) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 125.53; RSI 15.0; momentum 3m -39.7%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 90/100; cobertura 100/100; ROE 117.4%; margen 62.5%; crecimiento ingresos 103.2%; deuda/capital 14.31; PER 13.48.
 - **SMCI** (S&P 500) — VIGILAR: confirmar fundamentales/datos. Cierre 21.65; RSI 28.0; momentum 3m -38.4%; fundamentales: FUNDAMENTALES MIXTOS; puntuación 70/100; cobertura 100/100; ROE 32.4%; margen 6.8%; crecimiento ingresos 297.5%; deuda/capital 57.12; PER 4.57.
-- **RHM.DE** (DAX 40) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 693.40; RSI 21.9; momentum 3m -38.0%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 75/100; cobertura 100/100; ROE 26.7%; margen 7.0%; crecimiento ingresos 36.4%; deuda/capital 57.47; PER 25.53.
+- **RHM.DE** (DAX 40) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 693.40; RSI 21.9; momentum 3m -38.0%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 75/100; cobertura 100/100; ROE 26.7%; margen 7.0%; crecimiento ingresos 36.4%; deuda/capital 57.47; PER 24.40.
 - **CAT** (S&P 500) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 510.45; RSI 24.2; momentum 3m -36.9%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 75/100; cobertura 100/100; ROE 56.1%; margen 15.2%; crecimiento ingresos 17.3%; deuda/capital 210.41; PER 20.03.
 - **FIS** (S&P 500) — ESTUDIAR: debilidad técnica con fundamentales favorables. Cierre 25.83; RSI 30.2; momentum 3m -36.9%; fundamentales: FUNDAMENTALES FAVORABLES; puntuación 100/100; cobertura 100/100; ROE 23.0%; margen 26.8%; crecimiento ingresos 27.1%; deuda/capital 128.43; PER 3.86.
 - **DELL** (S&P 500) — VIGILAR: confirmar fundamentales/datos. Cierre 278.02; RSI 28.5; momentum 3m -35.7%; fundamentales: FUNDAMENTALES MIXTOS; puntuación 64/100; cobertura 70/100; ROE N/D; margen 7.5%; crecimiento ingresos 57.7%; deuda/capital N/D; PER 16.16.
